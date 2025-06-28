@@ -225,7 +225,7 @@ if __name__ == "__main__":
                         # After-epoch validation
                         classifier.eval()
                         with torch.no_grad():
-                            val_loss = train_utils.validate_model(classifier, val_loader, criterion, device)
+                            val_loss, _, _ = train_utils.validate_model(classifier, val_loader, criterion, device)
                         val_losses.append(val_loss)
                         # Early stopping or best performance update
                         if val_loss < subfold_best_performance:
@@ -275,7 +275,7 @@ if __name__ == "__main__":
                     # After-epoch validation
                     classifier.eval()
                     with torch.no_grad():
-                        val_loss = train_utils.validate_model(classifier, val_loader, criterion, device)
+                        val_loss, _, _ = train_utils.validate_model(classifier, val_loader, criterion, device)
                     val_losses.append(val_loss)
                     # Early stopping or best performance update
                     if val_loss < subfold_best_performance:

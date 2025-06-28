@@ -1,0 +1,79 @@
+data_config:
+    filename: pkl_name     # name of the .pkl with the dataset --> pkl_name.pkl
+    name: NameOfTask     # name of the directory name for the task
+    im_size: 128     # target size of the images (128x128)
+    im_ch: 3      # channels of the images
+    num_classes: 10     # task number of classes
+    save_data_summary: true     # wether to save a summary of the data
+
+train_config:
+    batch_size: 32     # default batch size
+    n_epochs: 100     # max number of training epochs
+    augmentation_probs:     # probabilities of each modality of augmentation for the training set
+        gaussian: 0.2
+        s&p: 0.1
+        blur: 0.2
+        hflip: 0.5
+        vflip: 0.5
+        rotate: 0.3
+    lr: 5e-05     # default learning rate
+    n_folds: 5     # number of folds for the validation
+    patience: 5     # early-stopping patience
+    model_config:     # default model configuration
+        down_ch:     # output channels of each down block
+          - 16 
+          - 16
+          - 32
+          - 64
+          - 128
+        layers:     # number of layers in each down block
+          - 1
+          - 2
+          - 3
+          - 3
+        head_features:     # classification head hidden layers size
+          - 1024
+          - 512
+          - 256
+    hparam_search: 'random'     # hyperparameters optimization mode: 'random' or 'grid'
+    epoch_estimation: 'holdout'     # epoch estimation for each combination mode: 'holdout' or 'subfolds'
+
+hyperparameters:     # hyperparameters to optimize
+    lr:
+      - 0.0001
+      - 5e-05
+      - 1e-05
+    batch_size:
+      - 32
+      - 64
+    model_config:
+      - down_ch:
+          - 16
+          - 16
+          - 32
+          - 64
+          - 128
+        layers:
+          - 1
+          - 2
+          - 3
+          - 3
+        head_features:
+          - 1024
+          - 512
+          - 256
+      - down_ch:
+          - 8
+          - 8
+          - 16
+          - 32
+          - 64
+        layers:
+          - 1
+          - 2
+          - 2
+          - 2
+        head_features:
+          - 1024
+          - 512
+          - 256

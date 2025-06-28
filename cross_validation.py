@@ -177,7 +177,7 @@ if __name__ == "__main__":
         best_epochs_per_fold = []
         balanced_accuracies = []
         f1s = []
-        combination_cm = np.zeros((len(used_classes), len(used_classes)), dtype=int)
+        combination_cm = np.zeros((data_config['num_classes'], data_config['num_classes']), dtype=int)
         completed_folds = []
 
         # last combination checkpoint loading
@@ -311,15 +311,15 @@ if __name__ == "__main__":
             # Fold scores and confusion matrix computing
             balanced_accuracies.append(balanced_accuracy_score(labels, preds))
             f1s.append(f1_score(labels, preds, average='macro'))
-            fold_cm = confusion_matrix(labels, preds, labels=used_classes)
+            fold_cm = confusion_matrix(labels, preds)
             combination_cm += fold_cm
 
             # Checkpoints and results saving
             completed_folds.append(fold_id)
             utils.save_fold_checkpoint(fold_id, combination_cm, balanced_accuracies, f1s, best_epochs_per_fold,
                                        completed_folds)
-            utils.save_fold_results(fold_cm, combination_id, fold_id, used_classes, class2names,
-                                    balanced_accuracies[-1], f1s[-1])
+            utils.save_fold_results(fold_cm, combination_id, fold_id, data_config['num_classes'], 
+                                    class2names, balanced_accuracies[-1], f1s[-1])
 
         # Combination performance and best epochs saving
         accuracy = combination_cm.trace() / combination_cm.sum()
@@ -330,7 +330,7 @@ if __name__ == "__main__":
         elif train_config['hparams_search'] == 'random':
             performance_matrix[indices] = (np.mean(balanced_accuracies) + np.mean(f1s) + accuracy) / 3
             best_epoch_per_combination[indices] = combination_epochs
-        utils.save_combination_results(combination_cm, combination_id, used_classes, class2names, combination_epochs)
+        utils.save_combination_results(combination_cm, combination_id, data_config['num_classes'], class2names, combination_epochs)
 
         # Combinations checkpoints updating
         np.save('checkpoints/performance_matrix.npy', performance_matrix)

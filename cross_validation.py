@@ -348,7 +348,7 @@ if __name__ == "__main__":
     os.remove('checkpoints/best_epoch_matrix.npy')
     os.remove('checkpoints/combinations_info.json')
     os.remove('checkpoints/performance_matrix.npy')
-    with open('results/hyperparams_checked.json', 'w') as f:
+    with open('results/cross_validation/hyperparams_checked.json', 'w') as f:
         json.dump({'values': hyperparams, 'combinations': hyperparams_combinations}, f)
 
     # Combinations summary

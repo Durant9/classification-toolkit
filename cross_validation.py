@@ -54,27 +54,19 @@ if __name__ == "__main__":
     # Load and assert data
     data = data_utils.load_assert_data_file(data_config['filename'] + '.pkl')
 
-    # No classes with less than n_folds samples
-    for key in list(data.keys()):
-        if len(data[key]) < train_config['n_folds']:
-            del data[key]
-
-    # IDs of used classes
-    used_classes = [cls - 1 for cls in sorted(data.keys())]
-
     # Load class2names dict
     with open('class2names.json', 'r') as f:
         class2names_str_keys = json.load(f)
-        class2names = {int(k) - 1: v for k, v in class2names_str_keys.items()}
+        class2names = {int(k): v for k, v in class2names_str_keys.items()}
 
-    # Create a summary of the data classes
+    # Create a summary of the data classes, if specified in the config
     if data_config['save_data_summary']:
         if not os.path.exists('data_summary'):
             os.makedirs('data_summary')
         data_utils.show_random_data(data, class2names)
         data_utils.show_frequencies(data, class2names)
 
-    # Folds creation
+    # Folds definition
     folds = data_utils.create_folds(data, n_folds=train_config['n_folds'])
 
     # Results and checkpoint folder creation
@@ -214,9 +206,9 @@ if __name__ == "__main__":
                     classifier = CNNClassifier(model_config).to(device)
                     optimizer = torch.optim.Adam(classifier.parameters(), lr=train_config['lr'])
                     # Subfold dataloaders
-                    train_loader, val_loader, _ = data_utils.create_dataloaders(None, train_config, data_config,
-                                                                                folds=folds, fold=fold_id,
-                                                                                subfold=subfold_id)
+                    train_loader, val_loader, _ = data_utils.create_dataloaders(None, train_config, data_config, 
+                                                                                mode='train_val_test', folds=folds, 
+                                                                                fold_id=fold_id, subfold_id=subfold_id)
                     # Subfold cumulative variables
                     subfold_best_performance = np.inf
                     best_epoch = 0
@@ -256,10 +248,15 @@ if __name__ == "__main__":
                 classifier = CNNClassifier(model_config).to(device)
                 optimizer = torch.optim.Adam(classifier.parameters(), lr=train_config['lr'])
 
-                # Dataloaders: subfold emulation to extract validation loader
-                train_loader, val_loader, _ = data_utils.create_dataloaders(None, train_config, data_config,
-                                                                            folds=folds, fold=fold_id,
-                                                                            subfold=np.random.randint(0, 4))
+                # Dataloaders: holdout on the train set
+                splits = {'train': 0.8, 'val': 0.0, 'test': 0.2}
+                fold_test_data = folds[fold_id]
+                merged = defaultdict(list)
+                for fold in [folds[i] for i in range(train_config['n_folds']) if i != fold_id]:
+                    for class_id, images in fold.items():
+                        merged[class_id].extend(images)
+                fold_train_data = dict(merged)
+                train_loader, val_loader = data_utils.create_dataloaders(fold_train_data, train_config, data_config, mode='train_test', splits=splits)
 
                 # Subfold cumulative variables
                 subfold_best_performance = np.inf
@@ -299,8 +296,8 @@ if __name__ == "__main__":
             # Fold actual training
             classifier = CNNClassifier(model_config).to(device)
             optimizer = torch.optim.Adam(classifier.parameters(), lr=train_config['lr'])
-            train_loader, test_loader = data_utils.create_dataloaders(None, train_config, data_config, folds=folds,
-                                                                      fold=fold_id, train_test_only=True)
+            train_loader, test_loader = data_utils.create_dataloaders(None, train_config, data_config, 
+                                                                      mode='train_test', folds=folds, fold_id=fold_id)
             classifier.train()
             for epoch in range(n_epochs_fold):
                 classifier, optimizer, _ = train_utils.train_model(classifier, optimizer, train_loader, criterion,
@@ -362,7 +359,7 @@ if __name__ == "__main__":
     best_hyperparams = hyperparams_combinations[np.argmax(performance_matrix)]
     for k, v in best_hyperparams.items():
         train_config[k] = v
-    train_config['n_epochs'] = best_epoch_per_combination[best_index]
+    train_config['n_epochs'] = int(best_epoch_per_combination[best_index])
 
     # Best config saving
     final_config_raw = {
@@ -377,11 +374,13 @@ if __name__ == "__main__":
     final_config = CommentedMap()
     for i, (key, value) in enumerate(final_config_raw.items()):
         final_config[key] = value
-        if i > 0:
+        if i < len(final_config_raw) - 1:
             final_config.yaml_set_comment_before_after_key(key, before='\n')
     yaml = YAML()
     yaml.indent(mapping=4, sequence=4, offset=2)
     yaml.preserve_quotes = True
+    if not os.path.exists('config'):
+        os.makedirs('config')
     with open("config/best_config.yaml", "w") as f:
         yaml.dump(final_config, f)
 

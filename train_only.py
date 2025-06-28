@@ -68,7 +68,6 @@ if __name__ == "__main__":
 
     # Check for model checkpoints. ckpt name = full_train_classifier_n.pth
     starting_epoch = 0
-    all_ckpts = []
     for filename in os.listdir('checkpoints'):
         if filename.endswith('.pth') and filename.startswith('full_train'):
             starting_epoch = int(filename.split('_')[-1].split('.')[0])

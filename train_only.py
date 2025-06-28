@@ -41,13 +41,10 @@ if __name__ == "__main__":
     # Load and assert data
     data = data_utils.load_assert_data_file(data_config['filename'] + '.pkl')
 
-    # IDs of used classes
-    used_classes = [cls - 1 for cls in sorted(data.keys())]
-
     # Load class2names dict
     with open('class2names.json', 'r') as f:
         class2names_str_keys = json.load(f)
-        class2names = {int(k) - 1: v for k, v in class2names_str_keys.items()}
+        class2names = {int(k): v for k, v in class2names_str_keys.items()}
 
     # Create a summary of the data classes
     if data_config['save_data_summary']:
@@ -67,7 +64,7 @@ if __name__ == "__main__":
     classifier = CNNClassifier(train_config['model_config']).to(device)
     classifier.train()
     optimizer = torch.optim.Adam(classifier.parameters(), lr=train_config['lr'])
-    train_loader = data_utils.create_dataloaders(data, train_config, data_config, train_only=True)
+    train_loader = data_utils.create_dataloaders(data, train_config, data_config, mode='train')
 
     # Check for model checkpoints. ckpt name = full_train_classifier_n.pth
     starting_epoch = 0
@@ -87,11 +84,11 @@ if __name__ == "__main__":
         # model checkpointing
         for filename in os.listdir('checkpoints'):
             if filename.endswith('.pth') and filename.startswith('full_train'):
-                os.remove(filename)
-        torch.save(classifier.state_dict(), 'full_train_classifier_{}.pth'.format(epoch))
-
+                os.remove(os.path.join('checkpoints', filename))
+        torch.save(classifier.state_dict(), 'checkpoints/full_train_classifier_{}.pth'.format(epoch))
+    
     # checkpoints deleting and final model saving
     for filename in os.listdir('checkpoints'):
         if filename.endswith('.pth') and filename.startswith('full_train'):
-            os.remove(filename)
+            os.remove(os.path.join('checkpoints', filename))
     torch.save(classifier.state_dict(), 'full_train_classifier.pth')

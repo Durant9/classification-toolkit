@@ -79,14 +79,33 @@ if __name__ == "__main__":
 
     # ----------------------------------------     Training     -----------------------------------------------
     print('Training for {} epochs...'.format(train_config['n_epochs']))
+    losses = []
     for epoch in tqdm(range(starting_epoch, train_config['n_epochs'])):
-        classifier, optimizer, _ = train_utils.train_model(classifier, optimizer, train_loader, criterion, device)
+        classifier, optimizer, loss = train_utils.train_model(classifier, optimizer, train_loader, criterion, device)
+        losses.append(loss)
         # model checkpointing
         for filename in os.listdir('checkpoints'):
             if filename.endswith('.pth') and filename.startswith('full_train'):
                 os.remove(os.path.join('checkpoints', filename))
         torch.save(classifier.state_dict(), 'checkpoints/full_train_classifier_{}.pth'.format(epoch))
+
+    # Save training losses
+    os.makedirs(os.path.join('results', 'train_only'), exist_ok=True)
+    plt.figure(figsize=(8, 6))
+    plt.plot(losses, label="Training Loss", color="blue", linewidth=2.5)
     
+    # Labels, legend and title
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss")
+    plt.title("Training loss")
+    plt.legend()
+    plt.grid(True)
+    
+    # Saving
+    filename = os.path.join('results', 'train_only', 'training_loss.png')
+    plt.savefig(filename)
+    plt.close()
+
     # checkpoints deleting and final model saving
     for filename in os.listdir('checkpoints'):
         if filename.endswith('.pth') and filename.startswith('full_train'):

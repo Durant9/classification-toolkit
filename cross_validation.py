@@ -28,7 +28,7 @@ def to_pure_dict(obj):
 
 def parse_config():
     yaml = YAML()
-    with open("config/cross_validation_config.yaml") as f:
+    with open("configs/cross_validation_config.yaml") as f:
         config_raw = yaml.load(f)
     config = to_pure_dict(config_raw)
     data_config = config['data_config']

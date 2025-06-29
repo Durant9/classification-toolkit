@@ -2,6 +2,7 @@ import utils.utils as utils
 import utils.data_utils as data_utils
 import utils.train_utils as train_utils
 from CNNclassifier import CNNClassifier
+from ViT.transformer import VIT
 
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap
@@ -34,9 +35,15 @@ def parse_config():
     data_config = config['data_config']
     train_config = config['train_config']
     hyperparams = config['hyperparameters']
-    train_config['model_config']['im_ch'] = data_config['im_ch']
-    train_config['model_config']['num_classes'] = data_config['num_classes']
-    train_config['model_config']['im_size'] = data_config['im_size']
+    if train_config['model_class'] == 'ViT': 
+        train_config['model_config']['im_channels'] = data_config['im_ch']
+        train_config['model_config']['image_width'] = data_config['im_size']
+        train_config['model_config']['image_height'] = data_config['im_size']
+        train_config['model_config']['num_classes'] = data_config['num_classes']
+    elif train_config['model_class'] == 'CNN':  
+        model_config['im_ch'] = data_config['im_ch']
+        model_config['num_classes'] = data_config['num_classes']
+        model_config['im_size'] = data_config['im_size']
     return data_config, train_config, hyperparams
 
 
@@ -167,9 +174,15 @@ if __name__ == "__main__":
         for key, value in values_comb.items():
             train_config[key] = value
         model_config = deepcopy(train_config['model_config'])
-        model_config['im_ch'] = data_config['im_ch']
-        model_config['num_classes'] = data_config['num_classes']
-        model_config['im_size'] = data_config['im_size']
+        if train_config['model_class'] == 'ViT': 
+            model_config['im_channels'] = data_config['im_ch']
+            model_config['image_width'] = data_config['im_size']
+            model_config['image_height'] = data_config['im_size']
+            model_config['num_classes'] = data_config['num_classes']
+        elif train_config['model_class'] == 'CNN': 
+            model_config['im_ch'] = data_config['im_ch']
+            model_config['num_classes'] = data_config['num_classes']
+            model_config['im_size'] = data_config['im_size']
 
         # Variables to fill at each fold
         best_epochs_per_fold = []
@@ -201,7 +214,10 @@ if __name__ == "__main__":
                 # Training and validation for each subfold
                 for subfold_id in tqdm(range(len(folds) - 1)):
                     # subfold model and optimizator
-                    classifier = CNNClassifier(model_config).to(device)
+                    if train_config['model_class'] == 'ViT': 
+                        classifier = VIT(model_config).to(device)
+                    elif train_config['model_class'] == 'CNN':  
+                        classifier = CNNClassifier(model_config).to(device)
                     optimizer = torch.optim.Adam(classifier.parameters(), lr=train_config['lr'])
                     # Subfold dataloaders
                     train_loader, val_loader, _ = data_utils.create_dataloaders(None, train_config, data_config, 
@@ -243,7 +259,10 @@ if __name__ == "__main__":
             # If the validation is not nested
             elif train_config['epoch_estimation'] == 'holdout':
                 # Model and optimizator
-                classifier = CNNClassifier(model_config).to(device)
+                if train_config['model_class'] == 'ViT': 
+                    classifier = VIT(model_config).to(device)
+                elif train_config['model_class'] == 'CNN':  
+                    classifier = CNNClassifier(model_config).to(device)
                 optimizer = torch.optim.Adam(classifier.parameters(), lr=train_config['lr'])
 
                 # Dataloaders: holdout on the train set
@@ -292,7 +311,10 @@ if __name__ == "__main__":
             best_epochs_per_fold.append(n_epochs_fold)
 
             # Fold actual training
-            classifier = CNNClassifier(model_config).to(device)
+            if train_config['model_class'] == 'ViT': 
+                classifier = VIT(model_config).to(device)
+            elif train_config['model_class'] == 'CNN':  
+                classifier = CNNClassifier(model_config).to(device)
             optimizer = torch.optim.Adam(classifier.parameters(), lr=train_config['lr'])
             train_loader, test_loader = data_utils.create_dataloaders(None, train_config, data_config, 
                                                                       mode='train_test', folds=folds, fold_id=fold_id)

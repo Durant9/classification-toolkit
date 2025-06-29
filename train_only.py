@@ -1,4 +1,5 @@
 from CNNclassifier import CNNClassifier
+from ViT.transformer import VIT
 import utils.train_utils as train_utils
 import utils.data_utils as data_utils
 import torch
@@ -24,9 +25,15 @@ def parse_config():
     config = to_pure_dict(config_raw)
     data_config = config['data_config']
     train_config = config['train_config']
-    train_config['model_config']['im_ch'] = data_config['im_ch']
-    train_config['model_config']['num_classes'] = data_config['num_classes']
-    train_config['model_config']['im_size'] = data_config['im_size']
+    if train_config['model_class'] == 'ViT': 
+        train_config['model_config']['im_channels'] = data_config['im_ch']
+        train_config['model_config']['image_width'] = data_config['im_size']
+        train_config['model_config']['image_height'] = data_config['im_size']
+        train_config['model_config']['num_classes'] = data_config['num_classes']
+    elif train_config['model_class'] == 'CNN':  
+        model_config['im_ch'] = data_config['im_ch']
+        model_config['num_classes'] = data_config['num_classes']
+        model_config['im_size'] = data_config['im_size']
     return data_config, train_config
 
 
@@ -61,7 +68,10 @@ if __name__ == "__main__":
         os.makedirs('checkpoints')
 
     # model, optimizator and loader initialization
-    classifier = CNNClassifier(train_config['model_config']).to(device)
+    if train_config['model_class'] == 'ViT': 
+        classifier = VIT(model_config).to(device)
+    elif train_config['model_class'] == 'CNN':  
+        classifier = CNNClassifier(model_config).to(device)
     classifier.train()
     optimizer = torch.optim.Adam(classifier.parameters(), lr=train_config['lr'])
     train_loader = data_utils.create_dataloaders(data, train_config, data_config, mode='train')

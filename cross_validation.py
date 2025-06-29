@@ -70,10 +70,8 @@ if __name__ == "__main__":
     folds = data_utils.create_folds(data, n_folds=train_config['n_folds'])
 
     # Results and checkpoint folder creation
-    if not os.path.exists('cross_validation_results'):
-        os.makedirs('cross_validation_results')
-    if not os.path.exists('checkpoints'):
-        os.makedirs('checkpoints')
+    os.makedirs('results/cross_validation', exist_ok=True)
+    os.makedirs('checkpoints', exist_ok=True)
 
     # Loss
     criterion = torch.nn.CrossEntropyLoss()

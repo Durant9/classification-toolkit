@@ -6,7 +6,7 @@ data_config:
     num_classes: 10     # task number of classes
     save_data_summary: true     # wether to save a summary of the data
 
-model_config:
+model_config:     # Configuration layout for the CNN model
     down_ch:     # output channels of each down block
       - 16
       - 16
@@ -22,6 +22,19 @@ model_config:
       - 1024
       - 512
       - 256
+
+model_config:      # Configuration layout for the ViT model
+    n_heads: 8
+    head_dim: 64
+    emb_dim: 128
+    attn_drop: 0.1
+    ff_dim: 256
+    ff_drop: 0.1
+    n_layers: 6
+    num_classes: 10
+    patch_height: 16
+    patch_width: 16
+    patch_emb_drop: 0.1
 
 train_config: 
     batch_size: 32

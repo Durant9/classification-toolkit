@@ -37,8 +37,9 @@ model_config:      # Configuration layout for the ViT model
     patch_emb_drop: 0.1
 
 train_config: 
+    model_class: ViT
     batch_size: 32
-    n_epoch': 30
+    n_epoch: 30
     augmentation_probs:     # probabilities of each modality of augmentation for the training set
         gaussian: 0.2
         s&p: 0.1

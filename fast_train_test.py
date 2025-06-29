@@ -4,6 +4,7 @@ import utils.utils as utils
 import utils.data_utils as data_utils
 import utils.train_utils as train_utils
 from CNNclassifier import CNNClassifier
+from ViT.transformer import VIT
 import os
 import torch
 import numpy as np
@@ -28,9 +29,15 @@ def parse_config():
     data_config = config['data_config']
     train_config = config['train_config']
     model_config = config['model_config']
-    model_config['im_ch'] = data_config['im_ch']
-    model_config['num_classes'] = data_config['num_classes']
-    model_config['im_size'] = data_config['im_size']
+    if train_config['model_class'] == 'ViT': 
+        model_config['im_channels'] = data_config['im_ch']
+        model_config['image_width'] = data_config['im_size']
+        model_config['image_height'] = data_config['im_size']
+        model_config['num_classes'] = data_config['num_classes']
+    elif train_config['model_class'] == 'CNN':  
+        model_config['im_ch'] = data_config['im_ch']
+        model_config['num_classes'] = data_config['num_classes']
+        model_config['im_size'] = data_config['im_size']
     return data_config, train_config, model_config
 
 if __name__ == "__main__":
@@ -65,7 +72,10 @@ if __name__ == "__main__":
     os.makedirs('checkpoints', exist_ok=True)
 
     # Model creation and loading. Checkpoint names: fast_train_classifier_n.pth or best_fast_train_classifier_n.pth
-    classifier = CNNClassifier(model_config).to(device)
+    if train_config['model_class'] == 'ViT': 
+        classifier = VIT(model_config).to(device)
+    elif train_config['model_class'] == 'CNN':  
+        classifier = CNNClassifier(model_config).to(device)
     print("Total classifier's parameters: ", sum(p.numel() for p in classifier.parameters()))
     starting_epoch = 0
     all_ckpts = []
@@ -154,9 +164,13 @@ if __name__ == "__main__":
 
     # ---------------------------------------------------      Testing     ------------------------------------------------------
     # Best ckpt loading
-    classifier = CNNClassifier(model_config).to(device)
+    if train_config['model_class'] == 'ViT': 
+        classifier = VIT(model_config).to(device)
+    elif train_config['model_class'] == 'CNN':
+        classifier = CNNClassifier(model_config).to(device)
     for filename in os.listdir('checkpoints'):
-        if filename.endswith('.pth') and filename.startswith('best') and 'fast_train' in filename: # nome ckpt = best_fast_train_classifier_n.pth
+        # ckpt name = best_fast_train_classifier_n.pth
+        if filename.endswith('.pth') and filename.startswith('best') and 'fast_train' in filename: 
             print('Loading best checkpoint...')
             classifier.load_state_dict(torch.load(os.path.join('checkpoints', filename)))
 

@@ -17,7 +17,7 @@ train_config:
         vflip: 0.5
         rotate: 0.3
     lr: 0.0001
-    model_config:
+    model_config:     # Configuration layout for the CNN model
         down_ch:     # output channels of each down block
           - 16
           - 16
@@ -33,3 +33,14 @@ train_config:
           - 1024
           - 512
           - 256
+    model_config:      # Configuration layout for the ViT model
+        n_heads: 8
+        head_dim: 64
+        emb_dim: 128
+        attn_drop: 0.1
+        ff_dim: 256
+        ff_drop: 0.1
+        n_layers: 6
+        patch_height: 16
+        patch_width: 16
+        patch_emb_drop: 0.1

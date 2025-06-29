@@ -31,7 +31,6 @@ model_config:      # Configuration layout for the ViT model
     ff_dim: 256
     ff_drop: 0.1
     n_layers: 6
-    num_classes: 10
     patch_height: 16
     patch_width: 16
     patch_emb_drop: 0.1
